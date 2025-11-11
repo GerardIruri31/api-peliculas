@@ -1,0 +1,40 @@
+org: gerardiruri31utec
+service: api-pelicula
+
+provider:
+  name: aws
+  runtime: python3.13
+  memorySize: 1024
+  timeout: 20
+  iam:
+    role: arn:aws:iam::058264221898:role/LabRole
+  environment:
+    TABLE_NAME: ${sls:stage}-t_peliculas # <--- AQUÍ EL FIX
+
+functions:
+  crear:
+    handler: CrearPelicula.lambda_handler
+    events:
+      - http:
+          path: /pelicula/crear
+          method: post
+          cors: true
+          integration: lambda
+
+resources:
+  Resources:
+    TablaComentarios:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: uuid
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
